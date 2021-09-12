@@ -43,13 +43,37 @@ function createBlock(_data, index) {
 	return block;
 }
 
-console.info(`Blockchain is valid: ${JSON.stringify(Blockchain)}`);
+console.info(`Blockchain is valid: ${verifyChain(Blockchain)}`);
 
 // **********************************
 
-function blockHash(bl) {
+function blockHash(block) {
 	return crypto
 		.createHash("sha256")
-		.update(`${bl.index} ${bl.data} ${bl.timestamp} ${bl.prevHash}`)
+		.update(`${block.index} ${block.data} ${block.timestamp} ${block.prevHash}`)
 		.digest("hex");
+}
+
+function verifyBlock(block) {
+	if (block.data == null) return false;
+	if (block.index === 0) {
+		if (block.hash !== "000000") return false;
+	} else {
+		if (!block.prevHash) return false;
+		if (!(typeof block.index === "number" && Number.isInteger(block.index) && block.index > 0)) {
+			return false;
+		}
+		if (block.hash !== blockHash(block)) return false;
+	}
+	return true;
+}
+
+function verifyChain(chain) {
+	let prevHash;
+	for (let block of chain.blocks) {
+		if (prevHash && block.prevHash !== prevHash) return false;
+		if (!verifyBlock(block)) return false;
+		prevHash = block.hash;
+	}
+	return true;
 }
